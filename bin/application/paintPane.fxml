@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane fx:id="mainScene" prefHeight="375.0" prefWidth="512.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.PaintController">
+   <right>
+      <VBox fx:id="toolsPanel" alignment="TOP_RIGHT" prefHeight="350.0" prefWidth="57.0" spacing="5.0" style="-fx-background-color: rgb(25,25,25);" BorderPane.alignment="CENTER">
+         <opaqueInsets>
+            <Insets />
+         </opaqueInsets>
+         <BorderPane.margin>
+            <Insets />
+         </BorderPane.margin>
+         <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </padding></VBox>
+   </right>
+   <bottom>
+      <HBox fx:id="toolPropertyPanel" prefHeight="25.0" style="-fx-background-color: rgb(25,25,25);" BorderPane.alignment="CENTER" />
+   </bottom>
+   <center>
+      <Pane fx:id="canvas_anchor" BorderPane.alignment="CENTER">
+         <children>
+            <Canvas fx:id="canvas" height="350.0" width="511.0" />
+         </children>
+      </Pane>
+   </center>
+</BorderPane>
