@@ -13,7 +13,7 @@
    <children>
       <VBox layoutX="151.0" layoutY="78.0" prefHeight="200.0" prefWidth="331.0" style="-fx-padding: 5px; -fx-spacing: 5px;">
          <children>
-            <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="43.0" prefWidth="331.0" style="-fx-background-color: transparent;" text="Create Canvas" textAlignment="CENTER" textFill="#544747">
+            <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="43.0" prefWidth="261.0" style="-fx-background-color: transparent;" text="Create Canvas" textAlignment="CENTER" textFill="#544747">
                <font>
                   <Font name="System Bold Italic" size="18.0" />
                </font>
@@ -21,7 +21,7 @@
             <Group>
                <children>
                   <Label text="Width (px)" />
-                  <TextField layoutY="17.0" prefHeight="25.0" prefWidth="261.0">
+                  <TextField fx:id="cWidthField" layoutY="17.0" prefHeight="25.0" prefWidth="261.0">
                      <opaqueInsets>
                         <Insets />
                      </opaqueInsets>
@@ -31,7 +31,7 @@
             <Group layoutX="15.0" layoutY="58.0">
                <children>
                   <Label text="Height (px)" />
-                  <TextField layoutY="17.0" prefHeight="25.0" prefWidth="261.0">
+                  <TextField fx:id="cHeightField" layoutY="17.0" prefHeight="25.0" prefWidth="261.0">
                      <opaqueInsets>
                         <Insets />
                      </opaqueInsets>

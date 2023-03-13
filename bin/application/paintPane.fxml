@@ -11,7 +11,7 @@
 
 <BorderPane fx:id="mainScene" prefHeight="375.0" prefWidth="512.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.PaintController">
    <right>
-      <VBox fx:id="toolsPanel" alignment="TOP_RIGHT" blendMode="SRC_ATOP" minWidth="-Infinity" prefHeight="350.0" prefWidth="57.0" spacing="5.0" style="-fx-background-color: rgb(25,25,25);" BorderPane.alignment="CENTER">
+      <VBox fx:id="toolPropertyPanel" alignment="TOP_RIGHT" blendMode="SRC_ATOP" minWidth="-Infinity" prefHeight="350.0" prefWidth="54.0" spacing="5.0" style="-fx-background-color: rgb(25,25,25);" BorderPane.alignment="CENTER">
          <opaqueInsets>
             <Insets />
          </opaqueInsets>
@@ -23,7 +23,7 @@
          </padding></VBox>
    </right>
    <bottom>
-      <HBox fx:id="toolPropertyPanel" minHeight="-Infinity" prefHeight="25.0" style="-fx-background-color: rgb(25,25,25);" BorderPane.alignment="CENTER" />
+      <HBox fx:id="toolsPanel" minHeight="-Infinity" prefHeight="25.0" style="-fx-background-color: rgb(25,25,25);" BorderPane.alignment="CENTER" />
    </bottom>
    <center>
       <Pane fx:id="canvas_anchor" minWidth="-Infinity" prefHeight="350.0" prefWidth="50.0" style="-fx-background-color: rgb(230, 230, 230);" BorderPane.alignment="CENTER">

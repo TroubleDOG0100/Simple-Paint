@@ -55,11 +55,11 @@ public class Main extends Application {
 			setupEvents();
 			
 			// Setup pages.
-			LoadedPageResult result = loadPage("canvasCreate", false);
+			LoadedPageResult result = loadPage("canvasCreate", true);
 			createControl = (CCreateController) result.control;
 			createPane = (AnchorPane) result.root;
 			
-			result = loadPage("paintPane", true);
+			result = loadPage("paintPane", false);
 			paintControl = (PaintController) result.control;
 			paintPane = (BorderPane) result.root;
 			
@@ -68,6 +68,10 @@ public class Main extends Application {
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public static void main(String[] args) {
+		launch(args);
 	}
 
 	private void setupEvents() {
@@ -93,6 +97,8 @@ public class Main extends Application {
 			return new LoadedPageResult(node, controller);
 		}catch(IOException e){
 			System.out.println("Could not load scene: " + fxmlName + " error: " + e.getMessage());
+			// No point in continuing :(
+			System.exit(50);
 		}
 		return null;
 	}
@@ -113,9 +119,13 @@ public class Main extends Application {
 		
 		return alertWin.showAndWait().get() == ButtonType.OK;
 	}
-
-	public static void main(String[] args) {
-		launch(args);
+	
+	public static void displayErrorAlert(String title, String content) {
+		Alert alertWin = new Alert(AlertType.ERROR);
+		alertWin.setTitle(title);
+		alertWin.setContentText(content);
+		
+		alertWin.show();
 	}
 
 	public static void saveImageToFile(File file, String imageFormat, WritableImage image) {

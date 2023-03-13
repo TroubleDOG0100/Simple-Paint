@@ -5,6 +5,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import javafx.fxml.FXML;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -18,9 +19,13 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.shape.StrokeLineJoin;
 import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
+import javafx.stage.Screen;
 import utility.CursorBounds;
+import utility.Vector2D;
 
 public class PaintController implements ControllerInterface {
 	
@@ -28,6 +33,8 @@ public class PaintController implements ControllerInterface {
 	
 	private final static String INITIAL_DIR_PATH = "C:\\\\Users\\\\User\\\\Documents\\\\Testing";
 	private final static double  DEFAULT_BRUSH_SIZE = 10.0;
+	private final static double MAX_DIST_BEFORE_PATH = 4;
+	
 	private Color paintColor = new Color((25/255), (25/255), (25/255), 1);
 	private String currentTool;
 	private String selectedText = "Text";
@@ -35,10 +42,11 @@ public class PaintController implements ControllerInterface {
 	private double brushSize;
 	
 	private CursorBounds cursorBounds;
+	private Vector2D lastDragPos;
 	
 	@FXML private BorderPane mainScene;
-	@FXML private VBox toolsPanel;
-	@FXML private HBox toolPropertyPanel;
+	@FXML private HBox toolsPanel;
+	@FXML private VBox toolPropertyPanel;
 	@FXML private Canvas canvas;
 	@FXML private Pane canvas_anchor;
 	@FXML private AnchorPane canvas_tile;
@@ -50,7 +58,6 @@ public class PaintController implements ControllerInterface {
 		Main.mainPane.setCenter(mainScene);
 		createPropertyPanel(PAINT_TOOLS[0]);
 		mainScene.setVisible(true);
-		System.out.println(mainScene.isVisible());
 	}
 	
 	@Override
@@ -63,7 +70,7 @@ public class PaintController implements ControllerInterface {
 			try {
 				FileChooser fileChooser = new FileChooser();
 				
-				// Create extensionfilter to only
+				// Create extensionfilter to only accept png files
 				FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("PNG files (*.png)","*.png");
 				fileChooser.getExtensionFilters().add(extFilter);
 				
@@ -90,8 +97,6 @@ public class PaintController implements ControllerInterface {
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		System.out.println("Paint intialized");
-		
 		// get graphics context in which we will draw
 		canvasGraphicContext = canvas.getGraphicsContext2D();
 		
@@ -109,15 +114,34 @@ public class PaintController implements ControllerInterface {
 		
 		// Setup canvas event listeners/handlers
 		canvas.setOnMouseDragged(e -> {
+			double xWithout = e.getX();
+			double yWithout = e.getY();
 			double x = e.getX() - brushSize/2; 
 			double y = e.getY() - brushSize/2;
 			
 			cursorBounds.moveTo(e.getX(), e.getY(), canvas.getWidth(), canvas.getHeight());
 			if (currentTool.equals("Paint")) {
-				canvasGraphicContext.fillOval(x, y, brushSize, brushSize);
+				if (lastDragPos.distanceTo(xWithout, yWithout) < MAX_DIST_BEFORE_PATH) {
+					canvasGraphicContext.fillOval(x, y, brushSize, brushSize);
+					lastDragPos.setTo(xWithout, yWithout);
+				}else {
+					canvasGraphicContext.moveTo(lastDragPos.x, lastDragPos.y);
+					canvasGraphicContext.lineTo(xWithout, yWithout);
+				
+					canvasGraphicContext.stroke();
+					lastDragPos.setTo(xWithout, yWithout);
+				}
+				
 			}else if (currentTool.equals("Erase")) {
 				canvasGraphicContext.clearRect(x, y, brushSize, brushSize);
 			}
+		});
+		
+		canvas.setOnMouseReleased(e -> {
+			System.out.println("Exited");
+			canvasGraphicContext.closePath();
+			canvasGraphicContext.beginPath();
+			lastDragPos = null;
 		});
 		
 		
@@ -125,20 +149,28 @@ public class PaintController implements ControllerInterface {
 			cursorBounds.moveTo(e.getX(), e.getY(),  canvas.getWidth(),  canvas.getHeight());
 		});
 		
-		
-		canvas.setOnMouseClicked(e -> {
-			double x = e.getX() - textSize/2; 
-			double y = e.getY() + textSize/2;
+		canvas.setOnMousePressed(e -> {
+			double x = e.getX(); 
+			double y = e.getY();
+			
 			
 			if (currentTool.equals("Text")) {
 				canvasGraphicContext.setFont(new Font(textSize));
-				canvasGraphicContext.fillText(selectedText, x, y);
+				canvasGraphicContext.fillText(selectedText, x - textSize/2, y + textSize/2);
+			}else if (currentTool.equals("Paint")) {
+				canvasGraphicContext.fillOval(x - brushSize/2, y - brushSize/2, brushSize, brushSize);
+				lastDragPos = new Vector2D(x, y);
+			}else if (currentTool.equals("Erase")) {
+				canvasGraphicContext.clearRect(x - brushSize/2, y - brushSize/2, brushSize, brushSize);
 			}
 		});
 		
 		
-		canvas.setWidth(500);
-		canvas.setHeight(300);
+		// Initialize canvas to 0x0
+		setCanvasWidthAndHeight(0, 0);
+		
+		canvasGraphicContext.setLineCap(StrokeLineCap.ROUND);
+		canvasGraphicContext.setLineJoin(StrokeLineJoin.ROUND);
 		
 		canvas_tile.minWidthProperty().bind(canvas.widthProperty());
 		canvas_tile.minHeightProperty().bind(canvas.heightProperty());
@@ -158,7 +190,18 @@ public class PaintController implements ControllerInterface {
 	}
 	
 	private void setCurrentTool(String toolName) {
+		if (currentTool != null && currentTool.equals(toolName))
+			return;
+		
 		currentTool = toolName;
+		
+		toolsPanel.getChildren().forEach((node) -> {
+			if (((Button) node).getText().equals(toolName)){
+				node.getStyleClass().add("selected-button");
+			}else {
+				node.getStyleClass().remove("selected-button");
+			}
+		});
 		
 		if (toolName == PAINT_TOOLS[0] || toolName == PAINT_TOOLS[1]) {
 			canvas.setCursor(Cursor.NONE);
@@ -184,6 +227,7 @@ public class PaintController implements ControllerInterface {
 		colPicker.setOnAction(e -> {
 			paintColor = colPicker.getValue();
 			canvasGraphicContext.setFill(paintColor);
+			canvasGraphicContext.setStroke(paintColor);
 		});
 		
 		return colPicker;
@@ -191,6 +235,7 @@ public class PaintController implements ControllerInterface {
 	
 	private void createPropertyPanel(String toolName) {
 		toolPropertyPanel.getChildren().clear();
+		
 		if (toolName.equals("Paint")) {
 			ColorPicker colPicker = createColorPicker(paintColor);
 			
@@ -222,26 +267,41 @@ public class PaintController implements ControllerInterface {
 				textSize = Double.parseDouble(widthInput.getText());
 			});
 			
-			toolPropertyPanel.getChildren().addAll(colPicker,textInput,widthInput);
+			toolPropertyPanel.getChildren().addAll(colPicker, textInput, widthInput);
 		}
 	}
 
 	private void setBrushSize(double brushSize) {
 		this.brushSize = brushSize;
 		
+		canvasGraphicContext.setLineWidth(brushSize);
 		// For UX, update the cursorBounds size to indicate brush radius.
 		cursorBounds.setRadius(brushSize/2);
 	}
 
+	public void setCanvasWidthAndHeight(double width, double height) {
+		canvas.setWidth(width);
+		canvas.setHeight(height);
+	}
+	
 	public void putOnCanvasImage(Image image) {
 		double nCanvasWidth = Math.max(image.getWidth(), canvas.getWidth());
 		double nCanvasHeight = Math.max(image.getHeight(), canvas.getHeight());
 		
+		Vector2D maxDim = getMaxCanvasDimensions();
+		if (nCanvasWidth > maxDim.x || nCanvasHeight > maxDim.y) {
+			Main.displayErrorAlert("Image too big!", "The opened image cannot fit within the canvas!");
+			return;
+		}
+		
+		// When the user has not yet defined the canvas.
+		if (!mainScene.isVisible())
+			setCanvasWidthAndHeight(nCanvasWidth, nCanvasHeight);
+			
 		// Do we have to resize canvas to fit image.
 		if (nCanvasWidth > canvas.getWidth() || nCanvasHeight > canvas.getHeight()) {
 			if (Main.displayConfirmAlert("Canvas needs to be resized", "The canvas must be resized for the image to fit (new dimension:(" + (int) nCanvasWidth + "," + (int) nCanvasHeight + "), do you wish to resize it?")) {
-				canvas.setWidth(nCanvasWidth);
-				canvas.setHeight(nCanvasHeight);
+				setCanvasWidthAndHeight(nCanvasWidth, nCanvasHeight);
 			}else {
 				System.out.println("User denied to resize the canvas!");
 				return;
@@ -249,6 +309,12 @@ public class PaintController implements ControllerInterface {
 		}
 		
 		canvasGraphicContext.drawImage(image,0,0);
+	}
+
+	public Vector2D getMaxCanvasDimensions() {
+		// TODO: Window title bar not accounted for in height calc.
+		Rectangle2D bounds = Screen.getPrimary().getBounds();
+		return new Vector2D(bounds.getMaxX() - toolsPanel.getPrefWidth(), bounds.getMaxY() - toolPropertyPanel.getPrefHeight() - Main.mainControl.menuBar.getHeight());
 	}
 	
 }
