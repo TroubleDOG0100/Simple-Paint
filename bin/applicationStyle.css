@@ -12,3 +12,7 @@
 .color-pickers{
 	-fx-background-color: rgb(15,15,15);
 }
+
+.button{
+	-fx-background-color: rgb(15, 15, 15);
+}

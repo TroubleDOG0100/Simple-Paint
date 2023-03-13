@@ -31,8 +31,11 @@ public class CursorBounds extends Circle {
 	}
 
 	public void moveTo(double x,  double y) {
-		setCenterX(x);
-		setCenterY(y);
+		setCenterX(Math.max(x, getRadius()));
+		setCenterY(Math.max(y, getRadius()));
 	}
-
+	
+	public void moveTo(double x, double y, double limitX, double limitY){
+		moveTo(Math.min(x, (limitX - getRadius())), Math.min(y, (limitY - getRadius())));
+	}
 }

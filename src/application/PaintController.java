@@ -5,7 +5,6 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.Cursor;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -19,13 +18,11 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.StrokeType;
 import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import utility.CursorBounds;
 
-public class PaintController implements Initializable {
+public class PaintController implements ControllerInterface {
 	
 	private final static String[] PAINT_TOOLS = {"Paint","Erase","Text"};
 	
@@ -44,10 +41,11 @@ public class PaintController implements Initializable {
 	@FXML private HBox toolPropertyPanel;
 	@FXML private Canvas canvas;
 	@FXML private Pane canvas_anchor;
+	@FXML private AnchorPane canvas_tile;
 	
 	private GraphicsContext canvasGraphicContext;
 	
-	
+	@Override
 	public void open() {
 		Main.mainPane.setCenter(mainScene);
 		createPropertyPanel(PAINT_TOOLS[0]);
@@ -55,6 +53,7 @@ public class PaintController implements Initializable {
 		System.out.println(mainScene.isVisible());
 	}
 	
+	@Override
 	public void close() {
 		mainScene.setVisible(false);
 	}
@@ -84,7 +83,7 @@ public class PaintController implements Initializable {
 				if (file != null) {
 					Main.saveImageToFile(file,"png",canvas.snapshot(null,null));
 				}} catch(Exception e) {
-					System.out.println("Saving failed :(: " + e);
+					System.out.println("Saving failed :( :" + e);
 			}
 		}
 	}
@@ -113,7 +112,7 @@ public class PaintController implements Initializable {
 			double x = e.getX() - brushSize/2; 
 			double y = e.getY() - brushSize/2;
 			
-			cursorBounds.moveTo(e.getX(), e.getY());
+			cursorBounds.moveTo(e.getX(), e.getY(), canvas.getWidth(), canvas.getHeight());
 			if (currentTool.equals("Paint")) {
 				canvasGraphicContext.fillOval(x, y, brushSize, brushSize);
 			}else if (currentTool.equals("Erase")) {
@@ -123,7 +122,7 @@ public class PaintController implements Initializable {
 		
 		
 		canvas.setOnMouseMoved(e -> {
-			cursorBounds.moveTo(e.getX(), e.getY());
+			cursorBounds.moveTo(e.getX(), e.getY(),  canvas.getWidth(),  canvas.getHeight());
 		});
 		
 		
@@ -137,12 +136,15 @@ public class PaintController implements Initializable {
 			}
 		});
 		
-		// Setup canvas
-		canvas.setHeight((Main.mainPane.getHeight() - (toolPropertyPanel.getHeight() + (Main.mainControl.menuBar.getHeight()))));
-		canvas.setWidth((Main.mainPane.getWidth() - (toolPropertyPanel.getWidth() + (Main.mainControl.menuBar.getWidth()))));
-		canvas.heightProperty().bind(Main.mainPane.heightProperty().subtract(toolPropertyPanel.heightProperty().add(Main.mainControl.menuBar.heightProperty())));
-		canvas.widthProperty().bind(Main.mainPane.widthProperty().subtract(toolsPanel.widthProperty()));
 		
+		canvas.setWidth(500);
+		canvas.setHeight(300);
+		
+		canvas_tile.minWidthProperty().bind(canvas.widthProperty());
+		canvas_tile.minHeightProperty().bind(canvas.heightProperty());
+		canvas_tile.maxWidthProperty().bind(canvas.widthProperty());
+		canvas_tile.maxHeightProperty().bind(canvas.heightProperty());
+		canvas_anchor.toBack();	
 	}
 	
 	// Creates one of three available paint tools (paint, erase, text)
@@ -159,10 +161,10 @@ public class PaintController implements Initializable {
 		currentTool = toolName;
 		
 		if (toolName == PAINT_TOOLS[0] || toolName == PAINT_TOOLS[1]) {
-			canvas.setCursor(Cursor.OPEN_HAND);
+			canvas.setCursor(Cursor.NONE);
 			cursorBounds.setVisible(true);
 		}else{
-			canvas.setCursor(Cursor.DEFAULT);
+			canvas.setCursor(Cursor.TEXT);
 			cursorBounds.setVisible(false);
 		}
 		
@@ -232,6 +234,20 @@ public class PaintController implements Initializable {
 	}
 
 	public void putOnCanvasImage(Image image) {
+		double nCanvasWidth = Math.max(image.getWidth(), canvas.getWidth());
+		double nCanvasHeight = Math.max(image.getHeight(), canvas.getHeight());
+		
+		// Do we have to resize canvas to fit image.
+		if (nCanvasWidth > canvas.getWidth() || nCanvasHeight > canvas.getHeight()) {
+			if (Main.displayConfirmAlert("Canvas needs to be resized", "The canvas must be resized for the image to fit (new dimension:(" + (int) nCanvasWidth + "," + (int) nCanvasHeight + "), do you wish to resize it?")) {
+				canvas.setWidth(nCanvasWidth);
+				canvas.setHeight(nCanvasHeight);
+			}else {
+				System.out.println("User denied to resize the canvas!");
+				return;
+			}
+		}
+		
 		canvasGraphicContext.drawImage(image,0,0);
 	}
 	

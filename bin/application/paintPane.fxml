@@ -2,6 +2,8 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
@@ -9,7 +11,7 @@
 
 <BorderPane fx:id="mainScene" prefHeight="375.0" prefWidth="512.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.PaintController">
    <right>
-      <VBox fx:id="toolsPanel" alignment="TOP_RIGHT" prefHeight="350.0" prefWidth="57.0" spacing="5.0" style="-fx-background-color: rgb(25,25,25);" BorderPane.alignment="CENTER">
+      <VBox fx:id="toolsPanel" alignment="TOP_RIGHT" blendMode="SRC_ATOP" minWidth="-Infinity" prefHeight="350.0" prefWidth="57.0" spacing="5.0" style="-fx-background-color: rgb(25,25,25);" BorderPane.alignment="CENTER">
          <opaqueInsets>
             <Insets />
          </opaqueInsets>
@@ -21,12 +23,19 @@
          </padding></VBox>
    </right>
    <bottom>
-      <HBox fx:id="toolPropertyPanel" prefHeight="25.0" style="-fx-background-color: rgb(25,25,25);" BorderPane.alignment="CENTER" />
+      <HBox fx:id="toolPropertyPanel" minHeight="-Infinity" prefHeight="25.0" style="-fx-background-color: rgb(25,25,25);" BorderPane.alignment="CENTER" />
    </bottom>
    <center>
-      <Pane fx:id="canvas_anchor" BorderPane.alignment="CENTER">
+      <Pane fx:id="canvas_anchor" minWidth="-Infinity" prefHeight="350.0" prefWidth="50.0" style="-fx-background-color: rgb(230, 230, 230);" BorderPane.alignment="CENTER">
          <children>
-            <Canvas fx:id="canvas" height="350.0" width="511.0" />
+            <AnchorPane fx:id="canvas_tile" nodeOrientation="LEFT_TO_RIGHT" prefHeight="332.0" prefWidth="0.0" style="-fx-background-color: white;">
+               <children>
+                  <Canvas fx:id="canvas" height="332.0" width="447.0" />
+               </children>
+               <effect>
+                  <DropShadow height="6.34" offsetY="2.0" radius="4.1375" width="12.21" />
+               </effect>
+            </AnchorPane>
          </children>
       </Pane>
    </center>
