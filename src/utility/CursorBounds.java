@@ -15,7 +15,7 @@ public class CursorBounds extends Circle {
 		setStroke(new Color(200/255, 200/255, 200/255, 1));
 		setStrokeType(StrokeType.INSIDE);
 		setStrokeWidth(2);
-//		TODO: addCursorToGivenScene
+		
 		parent.getChildren().add(this);
 	}
 	

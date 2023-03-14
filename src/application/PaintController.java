@@ -2,15 +2,21 @@ package application;
 
 import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Vector;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ColorPicker;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
@@ -34,15 +40,36 @@ public class PaintController implements ControllerInterface {
 	private final static String INITIAL_DIR_PATH = "C:\\\\Users\\\\User\\\\Documents\\\\Testing";
 	private final static double  DEFAULT_BRUSH_SIZE = 10.0;
 	private final static double MAX_DIST_BEFORE_PATH = 4;
+	private final static double DEFAULT_FONT_SIZE = 15;
 	
 	private Color paintColor = new Color((25/255), (25/255), (25/255), 1);
 	private String currentTool;
 	private String selectedText = "Text";
-	private double textSize = 15;
+	private Font currentTextFont;
 	private double brushSize;
+	
+	public boolean hasChanged = false;
 	
 	private CursorBounds cursorBounds;
 	private Vector2D lastDragPos;
+	
+	private static class BrushSize{
+		String name;
+		Double val;
+		
+		public BrushSize(String name, double val) {
+			this.name = name;
+			this.val = val;
+		}
+		
+		@Override
+		public String toString() {
+			return name;
+		}
+	}
+	
+	private final static BrushSize[] BRUSH_SIZES = {new BrushSize("Small", 10), new BrushSize("Medium", 20), new BrushSize("Large", 35), new BrushSize("Custom", 0)};
+	
 	
 	@FXML private BorderPane mainScene;
 	@FXML private HBox toolsPanel;
@@ -66,6 +93,7 @@ public class PaintController implements ControllerInterface {
 	}
 
 	public void onSave() {
+		// Only save if a canvas has already been setup (i.e. the paintScene is visible)
 		if (mainScene.isVisible()) {
 			try {
 				FileChooser fileChooser = new FileChooser();
@@ -76,7 +104,6 @@ public class PaintController implements ControllerInterface {
 				
 				File initialDirectory = new File(INITIAL_DIR_PATH);
 				
-				// File will always return an abstract pathname, so it will be never null, but you can check if you can write in it to see if it exists and is accesable.
 				if (!initialDirectory.canWrite()) {
 					initialDirectory = new File(System.getProperty("user.home"));
 				}
@@ -88,9 +115,11 @@ public class PaintController implements ControllerInterface {
 				
 				// After a location has been chosen the code below will run, and the file is going to be the chosen by user, if he cancels it, it will be null
 				if (file != null) {
-					Main.saveImageToFile(file,"png",canvas.snapshot(null,null));
-				}} catch(Exception e) {
-					System.out.println("Saving failed :( :" + e);
+					Main.saveImageToFile(file, "png", canvas.snapshot(null,null));
+					hasChanged = false;
+				}
+			} catch(Exception e) {
+				System.out.println("Saving failed :( :" + e);
 			}
 		}
 	}
@@ -104,6 +133,7 @@ public class PaintController implements ControllerInterface {
 		
 		// Set the brushSize (also changes the size of the cursor bounds)
 		setBrushSize(DEFAULT_BRUSH_SIZE);
+		setFontSize(DEFAULT_FONT_SIZE);
 		
 		// Create all painting tools.
 		for (String toolName : PAINT_TOOLS) {
@@ -116,8 +146,8 @@ public class PaintController implements ControllerInterface {
 		canvas.setOnMouseDragged(e -> {
 			double xWithout = e.getX();
 			double yWithout = e.getY();
-			double x = e.getX() - brushSize/2; 
-			double y = e.getY() - brushSize/2;
+			double x = xWithout - brushSize/2; 
+			double y = yWithout - brushSize/2;
 			
 			cursorBounds.moveTo(e.getX(), e.getY(), canvas.getWidth(), canvas.getHeight());
 			if (currentTool.equals("Paint")) {
@@ -135,10 +165,11 @@ public class PaintController implements ControllerInterface {
 			}else if (currentTool.equals("Erase")) {
 				canvasGraphicContext.clearRect(x, y, brushSize, brushSize);
 			}
+			
+			hasChanged = true;
 		});
 		
 		canvas.setOnMouseReleased(e -> {
-			System.out.println("Exited");
 			canvasGraphicContext.closePath();
 			canvasGraphicContext.beginPath();
 			lastDragPos = null;
@@ -155,7 +186,7 @@ public class PaintController implements ControllerInterface {
 			
 			
 			if (currentTool.equals("Text")) {
-				canvasGraphicContext.setFont(new Font(textSize));
+				double textSize = currentTextFont.getSize();
 				canvasGraphicContext.fillText(selectedText, x - textSize/2, y + textSize/2);
 			}else if (currentTool.equals("Paint")) {
 				canvasGraphicContext.fillOval(x - brushSize/2, y - brushSize/2, brushSize, brushSize);
@@ -163,6 +194,8 @@ public class PaintController implements ControllerInterface {
 			}else if (currentTool.equals("Erase")) {
 				canvasGraphicContext.clearRect(x - brushSize/2, y - brushSize/2, brushSize, brushSize);
 			}
+			
+			hasChanged = true;
 		});
 		
 		
@@ -216,13 +249,13 @@ public class PaintController implements ControllerInterface {
 
 	private TextField createTextField(String fieldInput) {
 		TextField recSize = new TextField(fieldInput);
-		recSize.getStyleClass().add("paint-tools");
+		recSize.getStyleClass().add("paint-property-fields");
 		return recSize;
 	}
 	
 	private ColorPicker createColorPicker(Color input) {
 		ColorPicker colPicker = new ColorPicker(input);
-		colPicker.getStyleClass().addAll("color-pickers");
+		colPicker.getStyleClass().add("selection-boxes");
 		
 		colPicker.setOnAction(e -> {
 			paintColor = colPicker.getValue();
@@ -233,42 +266,80 @@ public class PaintController implements ControllerInterface {
 		return colPicker;
 	}
 	
+	private ChoiceBox<BrushSize> createBrushChoiceBox(){
+		// Fill the select/choicebox with opts.
+		ChoiceBox<BrushSize> choiceBox = new ChoiceBox<>();
+		choiceBox.getStyleClass().add("selection-boxes");
+		
+		for (BrushSize brushChoice : BRUSH_SIZES) {
+			choiceBox.getItems().add(brushChoice);
+			
+			if (brushSize == brushChoice.val || (choiceBox.getValue() == null && brushChoice.name == "Custom"))
+				choiceBox.setValue(brushChoice);
+		}
+		
+		return choiceBox;
+	}
+	
+
+	
 	private void createPropertyPanel(String toolName) {
 		toolPropertyPanel.getChildren().clear();
 		
-		if (toolName.equals("Paint")) {
-			ColorPicker colPicker = createColorPicker(paintColor);
+		ArrayList<Node> propertyFields = new ArrayList<>(3);
+		
+		// Can tool's color be changed?
+		if (toolName.equals("Paint") || toolName.equals("Text"))
+			propertyFields.add(new LabeledField("Brush color", createColorPicker(paintColor)));
+		
+		// Can the brush size/font size be changed?
+		if (toolName.equals("Paint") || toolName.equals("Erase")) {
+			ChoiceBox<BrushSize> choiceBox = createBrushChoiceBox();
+			TextField propertyField = createTextField(Double.toString(brushSize));
 			
-			TextField recSize = createTextField(Double.toString(brushSize));
-			recSize.setOnAction(e -> {
-				setBrushSize(Double.parseDouble(recSize.getText()));
+			propertyField.setOnAction(e -> {
+				setBrushSize(Double.parseDouble(propertyField.getText()));
+				
+				choiceBox.setValue(BRUSH_SIZES[BRUSH_SIZES.length - 1]);
 			});
 			
-			toolPropertyPanel.getChildren().addAll(colPicker,recSize);
-		} else if (toolName.equals("Erase")) {
-			TextField recSize = createTextField(Double.toString(brushSize));
-			
-			recSize.setOnAction(e -> {
-				setBrushSize(Double.parseDouble(recSize.getText()));
+			choiceBox.setOnAction(e -> {
+				BrushSize selected = choiceBox.getValue();
+				if (selected == null) return;
+				
+				if (selected.name != "Custom") {
+					setBrushSize(selected.val);
+					propertyField.setText(Integer.toString((int) Math.round(selected.val)));
+				}
 			});
 			
-			toolPropertyPanel.getChildren().add(recSize);
-		} else if (toolName.equals("Text")) {
-			ColorPicker colPicker = createColorPicker(paintColor);
-			TextField textInput = createTextField(selectedText);
-			
-			textInput.setOnAction(e -> {
-				selectedText = textInput.getText();
-			});
-			
-			TextField widthInput = createTextField(Double.toString(textSize));
-			
-			widthInput.setOnAction(e -> {
-				textSize = Double.parseDouble(widthInput.getText());
-			});
-			
-			toolPropertyPanel.getChildren().addAll(colPicker, textInput, widthInput);
+			propertyFields.add(new LabeledField("Brush size", choiceBox));
+			propertyFields.add(new LabeledField("Custom size", propertyField));
 		}
+		
+		// Can the text size be changed?
+		if (toolName.equals("Text")) {
+			TextField propertyField1 = createTextField(Double.toString(currentTextFont.getSize()));
+			TextField propertyField2 = createTextField(selectedText);
+			
+			propertyField1.setOnAction(e -> {
+				setFontSize(Double.parseDouble(propertyField1.getText()));
+			});
+			
+			propertyField2.setOnAction(e -> {
+				selectedText = propertyField2.getText();
+			});
+			
+			propertyFields.add(new LabeledField("Font size", propertyField1));
+			propertyFields.add(new LabeledField("Text", propertyField2));
+		}
+			
+		toolPropertyPanel.getChildren().addAll(propertyFields);
+	}
+	
+	private void setFontSize(double fontSize) {
+		this.currentTextFont = new Font(fontSize);
+		canvasGraphicContext.setFont(currentTextFont);
 	}
 
 	private void setBrushSize(double brushSize) {
@@ -295,8 +366,11 @@ public class PaintController implements ControllerInterface {
 		}
 		
 		// When the user has not yet defined the canvas.
-		if (!mainScene.isVisible())
+		if (!mainScene.isVisible()) {
 			setCanvasWidthAndHeight(nCanvasWidth, nCanvasHeight);
+			Main.createControl.close();
+			open();
+		}
 			
 		// Do we have to resize canvas to fit image.
 		if (nCanvasWidth > canvas.getWidth() || nCanvasHeight > canvas.getHeight()) {
@@ -309,12 +383,13 @@ public class PaintController implements ControllerInterface {
 		}
 		
 		canvasGraphicContext.drawImage(image,0,0);
+		hasChanged = true;
 	}
 
 	public Vector2D getMaxCanvasDimensions() {
 		// TODO: Window title bar not accounted for in height calc.
 		Rectangle2D bounds = Screen.getPrimary().getBounds();
-		return new Vector2D(bounds.getMaxX() - toolsPanel.getPrefWidth(), bounds.getMaxY() - toolPropertyPanel.getPrefHeight() - Main.mainControl.menuBar.getHeight());
+		return new Vector2D(bounds.getMaxX() - toolPropertyPanel.getPrefWidth(), bounds.getMaxY() - toolsPanel.getPrefHeight() - Main.mainControl.menuBar.getHeight());
 	}
 	
 }

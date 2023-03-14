@@ -14,6 +14,13 @@
 	-fx-text-fill: rgb(250,250,250)
 }
 
+.paint-property-fields{
+	-fx-background-color: rgb(210,210,210);
+	-fx-effect: innershadow(three-pass-box, rgba(20, 20, 20, 0.4), 13, 0, 0, 0, 0); 
+	-fx-text-fill: rgb(50,50,50)
+}
+
+
 .selected-button{
 	-fx-background-color: rgb(230, 220, 50);
 	-fx-text-fill: rgb(255, 255, 255);
@@ -21,6 +28,21 @@
 	-fx-underline: true
 }
 
-.color-pickers{
-	-fx-background-color: rgb(15,15,15);
+.selection-boxes{
+	-fx-background-color: rgb(210,210,210);
+	-fx-max-width: Infinity
 }
+
+.destructive-action-btn{
+	-fx-background-color: rgb(170, 170, 170);
+}
+
+.cancel-btn{
+	-fx-background-color: blue;
+}
+
+.destructive-action-btn:hover, .cancel-btn:hover{
+	-fx-font-weight: bold
+}
+
+

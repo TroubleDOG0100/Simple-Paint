@@ -11,7 +11,7 @@
 
 <BorderPane fx:id="mainScene" prefHeight="375.0" prefWidth="512.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.PaintController">
    <right>
-      <VBox fx:id="toolPropertyPanel" alignment="TOP_RIGHT" blendMode="SRC_ATOP" minWidth="-Infinity" prefHeight="350.0" prefWidth="54.0" spacing="5.0" style="-fx-background-color: rgb(25,25,25);" BorderPane.alignment="CENTER">
+      <VBox fx:id="toolPropertyPanel" alignment="TOP_RIGHT" blendMode="SRC_ATOP" minWidth="-Infinity" prefHeight="350.0" prefWidth="100.0" spacing="5.0" style="-fx-background-color: rgb(25,25,25);" BorderPane.alignment="CENTER">
          <opaqueInsets>
             <Insets />
          </opaqueInsets>
@@ -20,7 +20,10 @@
          </BorderPane.margin>
          <padding>
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-         </padding></VBox>
+         </padding>
+         <children>
+            <VBox prefHeight="11.0" prefWidth="90.0" style="-fx-padding: 3px;" />
+         </children></VBox>
    </right>
    <bottom>
       <HBox fx:id="toolsPanel" minHeight="-Infinity" prefHeight="25.0" style="-fx-background-color: rgb(25,25,25);" BorderPane.alignment="CENTER" />
@@ -28,9 +31,9 @@
    <center>
       <Pane fx:id="canvas_anchor" minWidth="-Infinity" prefHeight="350.0" prefWidth="50.0" style="-fx-background-color: rgb(230, 230, 230);" BorderPane.alignment="CENTER">
          <children>
-            <AnchorPane fx:id="canvas_tile" nodeOrientation="LEFT_TO_RIGHT" prefHeight="332.0" prefWidth="0.0" style="-fx-background-color: white;">
+            <AnchorPane fx:id="canvas_tile" nodeOrientation="LEFT_TO_RIGHT" prefHeight="332.0" prefWidth="333.0" style="-fx-background-color: white;">
                <children>
-                  <Canvas fx:id="canvas" height="332.0" width="447.0" />
+                  <Canvas fx:id="canvas" height="332.0" width="389.0" />
                </children>
                <effect>
                   <DropShadow height="6.34" offsetY="2.0" radius="4.1375" width="12.21" />

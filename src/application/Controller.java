@@ -30,7 +30,7 @@ public class Controller implements Initializable {
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		scene.getStylesheets().add("applicationStyle.css");
+		scene.getStylesheets().add(Main.PATH_TO_APPLICATION_STYLESHEET);
 	}
 	
 	@FXML public void onOpenClicked(ActionEvent event){

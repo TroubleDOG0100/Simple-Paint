@@ -19,6 +19,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
@@ -29,6 +30,10 @@ import javafx.scene.layout.BorderPane;
 public class Main extends Application {
 	
 	private final static String APP_NAME = "Paint Simple";
+	public final static String PATH_TO_APPLICATION_STYLESHEET = "applicationStyle.css";
+	
+	private final static int MAX_SAVE_ATTEMPTS = 3;
+	
 	public static Controller mainControl;
 	public static PaintController paintControl;
 	public static CCreateController createControl;
@@ -88,6 +93,7 @@ public class Main extends Application {
 		try {
 			FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlName + ".fxml"));
 			Node node = loader.load();
+			node.setVisible(false);
 			ControllerInterface controller = loader.getController();
 			
 			if ((controller != null) && openOnLoad) {
@@ -105,17 +111,24 @@ public class Main extends Application {
 	
 	// Returns a bool indicating whether the window was closed or not. TODO: Have some structure that keeps history about canvas (i.e. collects changes)
 	public static boolean closeWindow() {
-		if (true) 
-			if (displayConfirmAlert("You have unsaved changed!", "You have made some changes to the canvas that have not been saved. Do you wish you save them?"))
-				mainStage.close();
+		if (!paintControl.hasChanged || displayConfirmAlert("You have unsaved changed!", "You have made some changes to the canvas that have not been saved. Are you sure you want to close the window without saving?"))
+			mainStage.close();
 		return false;
 	}
 
 	// Displays a confirmation alert box, yielding thread until a response has been received from user.
 	public static boolean displayConfirmAlert(String title, String content) {
 		Alert alertWin = new Alert(AlertType.CONFIRMATION);
+		alertWin.getDialogPane().getStylesheets().add(PATH_TO_APPLICATION_STYLESHEET);
 		alertWin.setTitle(title);
 		alertWin.setContentText(content);
+		Button okBtn = (Button) alertWin.getDialogPane().lookupButton(ButtonType.OK);
+		
+		okBtn.setText("Yes");
+		okBtn.getStyleClass().add("destructive-action-btn");
+		
+		Button cancelBtn = (Button) alertWin.getDialogPane().lookupButton(ButtonType.CANCEL);
+		cancelBtn.getStyleClass().add("cancel-btn");
 		
 		return alertWin.showAndWait().get() == ButtonType.OK;
 	}
@@ -128,12 +141,24 @@ public class Main extends Application {
 		alertWin.show();
 	}
 
-	public static void saveImageToFile(File file, String imageFormat, WritableImage image) {
-		try {
-			ImageIO.write(SwingFXUtils.fromFXImage(image,null), imageFormat, file);
-		} catch (IOException e) {
-			System.out.println("Saving failed: " + e);
+	// Attempts to write to file the given image, returns a bool indicating whether file saved sucessfully.
+	public static boolean saveImageToFile(File file, String imageFormat, WritableImage image) {
+		boolean success = false;
+		int attemptNo = 0;
+		while (!success && attemptNo < MAX_SAVE_ATTEMPTS) {
+			try {
+				 if (ImageIO.write(SwingFXUtils.fromFXImage(image,null), imageFormat, file))
+					 success = true;
+			} catch (IOException e) {
+				System.out.println("Saving failed: " + e);
+			}
+			attemptNo++;
 		}
+		
+		if (!success)
+			displayErrorAlert("Could not save file!", "Image could not be saved!");
+		
+		return success;
 	}
 
 	public static void openFile() {
