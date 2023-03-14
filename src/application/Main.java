@@ -168,7 +168,7 @@ public class Main extends Application {
 		FileChooser.ExtensionFilter pngExtension = new FileChooser.ExtensionFilter("PNG Files (*.png)","*.png");
 		fileChooser.getExtensionFilters().add(pngExtension);
 		
-		//Open up the file directory for the user to select the file he wants to open
+		//Open up the file directory for the user to select the file
 		File file = fileChooser.showOpenDialog(Main.mainStage);
 		
 		if (file != null) {

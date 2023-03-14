@@ -290,7 +290,7 @@ public class PaintController implements ControllerInterface {
 		
 		// Can tool's color be changed?
 		if (toolName.equals("Paint") || toolName.equals("Text"))
-			propertyFields.add(new LabeledField("Brush color", createColorPicker(paintColor)));
+			propertyFields.add(new LabeledField(toolName.equals("Text") ? "Font color" : "Brush color", createColorPicker(paintColor)));
 		
 		// Can the brush size/font size be changed?
 		if (toolName.equals("Paint") || toolName.equals("Erase")) {

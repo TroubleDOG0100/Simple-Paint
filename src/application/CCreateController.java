@@ -54,7 +54,7 @@ public class CCreateController implements ControllerInterface {
 	// Returns true if the current values inside the text fields are valid.
 	private Validator validateFields() {
 		Validator valid = new Validator();
-//		Stage mainStage = (Stage) Main.mainPane.getScene().getWindow();
+		
 		valid.addField("width", cWidthField.getText());
 		valid.addField("height", cHeightField.getText());
 		
